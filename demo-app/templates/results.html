@@ -1,0 +1,1315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid gap-lg">
+    <!-- 页面标题 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">分级审查报告</h2>
+            <p class="card-subtitle">FR-03：红/黄/绿三级风险展示</p>
+        </div>
+        <div class="card-content">
+            <p>基于AI审核结果生成的分级报告，以红/黄/绿三级颜色标识风险级别，包含置信度和原文锚点信息。</p>
+        </div>
+    </div>
+
+    <!-- 风险统计 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">风险统计概览</h3>
+            <div class="flex gap-sm">
+                <button class="btn btn-sm btn-secondary" id="refresh-results-btn">
+                    刷新结果
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="risk-stats grid grid-4 gap-md">
+                <div class="risk-stat">
+                    <div class="stat-value" id="total-results">{{ results|length }}</div>
+                    <div class="stat-label">审查条款总数</div>
+                </div>
+                <div class="risk-stat high-risk">
+                    <div class="stat-value" id="high-risk-count">0</div>
+                    <div class="stat-label">高风险条款</div>
+                </div>
+                <div class="risk-stat medium-risk">
+                    <div class="stat-value" id="medium-risk-count">0</div>
+                    <div class="stat-label">中等风险条款</div>
+                </div>
+                <div class="risk-stat low-risk">
+                    <div class="stat-value" id="low-risk-count">0</div>
+                    <div class="stat-label">低风险条款</div>
+                </div>
+            </div>
+            
+            <!-- 风险分布图 -->
+            <div class="risk-distribution">
+                <h4>风险分布</h4>
+                <div class="distribution-bar">
+                    <div class="distribution-segment high-risk" id="high-risk-bar" style="width: 0%"></div>
+                    <div class="distribution-segment medium-risk" id="medium-risk-bar" style="width: 0%"></div>
+                    <div class="distribution-segment low-risk" id="low-risk-bar" style="width: 0%"></div>
+                </div>
+                <div class="distribution-labels">
+                    <span>高风险</span>
+                    <span>中等风险</span>
+                    <span>低风险</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 审查结果列表 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">审查结果详情</h3>
+            <div class="flex gap-sm">
+                <button class="btn btn-sm btn-secondary" id="toggle-all-btn">
+                    展开全部
+                </button>
+                <button class="btn btn-sm btn-secondary" id="export-results-btn">
+                    导出报告
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="results-list" id="results-list">
+                {% for result in results %}
+                <div class="result-item" data-risk="{{ result.risk_level }}" data-id="{{ result.id }}">
+                    <div class="result-header">
+                        <div class="result-meta">
+                            <span class="result-badge badge-{{ result.risk_level }}">
+                                {% if result.risk_level == 'high' %}
+                                    高风险
+                                {% elif result.risk_level == 'medium' %}
+                                    中等风险
+                                {% else %}
+                                    低风险
+                                {% endif %}
+                            </span>
+                            <span class="result-clause">条款 {{ result.clause_id }}</span>
+                            <span class="result-page">第 {{ result.page }} 页</span>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-sm btn-secondary toggle-details-btn" data-result-id="{{ result.id }}">
+                                查看详情
+                            </button>
+                            <button class="btn btn-sm btn-secondary evidence-btn" data-result-id="{{ result.id }}">
+                                证据链定位
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="result-summary">
+                        <h4>{{ result.description }}</h4>
+                        <div class="result-stats">
+                            <span class="result-stat">
+                                <strong>置信度：</strong>
+                                <span class="confidence-value" data-value="{{ result.confidence }}">
+                                    {{ (result.confidence * 100)|round(1) }}%
+                                </span>
+                            </span>
+                            <span class="result-stat">
+                                <strong>规则：</strong>
+                                {{ result.rule_id }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-details" id="details-{{ result.id }}" style="display: none;">
+                        <div class="details-content">
+                            <div class="details-section">
+                                <h5>规则详情</h5>
+                                <div class="rule-info">
+                                    <div class="rule-meta">
+                                        <span><strong>规则ID：</strong>{{ result.rule_id }}</span>
+                                        <span class="rule-version">
+                                            <strong>规则版本：</strong>{{ result.rule_version }}
+                                        </span>
+                                    </div>
+                                    <p><strong>规则描述：</strong>{{ result.rule_description }}</p>
+                                    <div class="rule-quote">
+                                        <h6>规则原文引用：</h6>
+                                        <blockquote>{{ result.rule_quote }}</blockquote>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="details-section">
+                                <h5>原文位置</h5>
+                                <div class="original-position">
+                                    <span>页面：第 {{ result.page }} 页</span>
+                                    <span>坐标：X {{ result.position.x }}, Y {{ result.position.y }}</span>
+                                    <span>尺寸：{{ result.position.width }} × {{ result.position.height }}</span>
+                                </div>
+                                <div class="original-text">
+                                    <h6>原文内容：</h6>
+                                    <blockquote>{{ result.original_text }}</blockquote>
+                                </div>
+                            </div>
+                            
+                            <div class="details-section">
+                                <h5>证据链信息</h5>
+                                <div class="evidence-chain">
+                                    <div class="evidence-step">
+                                        <div class="step-number">1</div>
+                                        <div class="step-info">
+                                            <strong>文档解析</strong>
+                                            <p>OCR识别文档结构和内容</p>
+                                        </div>
+                                    </div>
+                                    <div class="evidence-arrow">→</div>
+                                    <div class="evidence-step">
+                                        <div class="step-number">2</div>
+                                        <div class="step-info">
+                                            <strong>条款抽取</strong>
+                                            <p>识别并结构化存储招标条款</p>
+                                        </div>
+                                    </div>
+                                    <div class="evidence-arrow">→</div>
+                                    <div class="evidence-step">
+                                        <div class="step-number">3</div>
+                                        <div class="step-info">
+                                            <strong>规则匹配</strong>
+                                            <p>匹配规则库中的审查规则</p>
+                                        </div>
+                                    </div>
+                                    <div class="evidence-arrow">→</div>
+                                    <div class="evidence-step">
+                                        <div class="step-number">4</div>
+                                        <div class="step-info">
+                                            <strong>证据绑定</strong>
+                                            <p>关联结论与原文位置信息</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="details-actions">
+                            <button class="btn btn-sm btn-secondary highlight-btn" data-result-id="{{ result.id }}">
+                                高亮原文
+                            </button>
+                            <button class="btn btn-sm btn-secondary expert-review-btn" data-result-id="{{ result.id }}">
+                                专家复核
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 文档预览区域 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">文档预览与证据定位</h3>
+            <div class="flex gap-sm">
+                <button class="btn btn-sm btn-secondary" id="zoom-in-btn">
+                    放大
+                </button>
+                <button class="btn btn-sm btn-secondary" id="zoom-out-btn">
+                    缩小
+                </button>
+                <button class="btn btn-sm btn-secondary" id="reset-view-btn">
+                    重置视图
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="document-preview-container">
+                <div class="preview-header">
+                    <div class="preview-info">
+                        <span><strong>当前页面：</strong><span id="current-page">12</span></span>
+                        <span><strong>缩放：</strong><span id="zoom-level">100%</span></span>
+                        <span><strong>高亮区域：</strong><span id="highlighted-area">无</span></span>
+                    </div>
+                </div>
+                <div class="document-preview" id="document-preview">
+                    <!-- 文档预览内容将通过JS动态生成 -->
+                    <div class="preview-placeholder">
+                        <p>点击结论中的"证据链定位"或"高亮原文"按钮，将在此处显示文档预览并高亮对应位置</p>
+                        <div class="preview-mock">
+                            <div class="page-mock">
+                                <div class="page-header">招标文件示例 - 第12页</div>
+                                <div class="page-content">
+                                    <div class="mock-text" style="top: 30px; left: 80px;">项目名称：智慧城市建设项目</div>
+                                    <div class="mock-text" style="top: 60px; left: 80px;">招标编号：ZC-2024-001</div>
+                                    <div class="mock-text" style="top: 90px; left: 80px;">发布日期：2024年1月15日</div>
+                                    <div class="mock-text" style="top: 120px; left: 80px;">投标保证金条款：</div>
+                                    <div class="mock-text highlight-area" id="highlight-target-1" style="top: 150px; left: 80px; width: 300px; height: 40px;">
+                                        投标人须缴纳投标保证金人民币伍拾万元整
+                                    </div>
+                                    <div class="mock-text" style="top: 200px; left: 80px;">评标标准：</div>
+                                    <div class="mock-text" style="top: 230px; left: 80px;">1. 技术方案40分</div>
+                                    <div class="mock-text" style="top: 260px; left: 80px;">2. 商务报价35分</div>
+                                    <div class="mock-text" style="top: 290px; left: 80px;">3. 实施方案25分</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-controls">
+                    <div class="page-nav">
+                        <button class="btn btn-sm btn-secondary" id="prev-page-btn">上一页</button>
+                        <span class="page-info">页数 <span id="page-current">12</span> / <span id="page-total">52</span></span>
+                        <button class="btn btn-sm btn-secondary" id="next-page-btn">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 颜色语义说明 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">颜色语义说明</h3>
+        </div>
+        <div class="card-content">
+            <div class="color-semantics grid grid-3 gap-md">
+                <div class="color-item high-risk">
+                    <div class="color-sample"></div>
+                    <div class="color-info">
+                        <h4>高风险（红色）</h4>
+                        <p>置信度低或规则严重违规，需要立即处理</p>
+                        <ul>
+                            <li>规则严重违规</li>
+                            <li>潜在法律风险</li>
+                            <li>必须修正的条款</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="color-item medium-risk">
+                    <div class="color-sample"></div>
+                    <div class="color-info">
+                        <h4>中等风险（黄色）</h4>
+                        <p>需要关注或规则轻微违规，建议修正</p>
+                        <ul>
+                            <li>规则轻微违规</li>
+                            <li>表述不清晰</li>
+                            <li>建议优化条款</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="color-item low-risk">
+                    <div class="color-sample"></div>
+                    <div class="color-info">
+                        <h4>低风险（绿色）</h4>
+                        <p>低风险或合规项，保持关注即可</p>
+                        <ul>
+                            <li>条款合规</li>
+                            <li>表述清晰</li>
+                            <li>可接受范围</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 置信度说明 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">置信度说明</h3>
+        </div>
+        <div class="card-content">
+            <div class="confidence-explain">
+                <div class="confidence-scale">
+                    <div class="scale-labels">
+                        <span>低可信度 (0-60%)</span>
+                        <span>中等可信度 (61-80%)</span>
+                        <span>高可信度 (81-100%)</span>
+                    </div>
+                    <div class="scale-bar">
+                        <div class="scale-fill low-confidence"></div>
+                        <div class="scale-fill medium-confidence"></div>
+                        <div class="scale-fill high-confidence"></div>
+                    </div>
+                </div>
+                
+                <div class="confidence-guidelines">
+                    <h4>置信度解读指南</h4>
+                    <div class="guideline-item">
+                        <span class="guideline-label">高可信度 (>80%)</span>
+                        <p>AI审查结果高度可靠，可基于此结果做出决策</p>
+                    </div>
+                    <div class="guideline-item">
+                        <span class="guideline-label">中等可信度 (60-80%)</span>
+                        <p>建议人工复核确认，结合业务经验判断</p>
+                    </div>
+                    <div class="guideline-item">
+                        <span class="guideline-label">低可信度 (<60%)</span>
+                        <p>必须由专家人工复核，不推荐直接采纳</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.risk-stats {
+    margin-bottom: var(--spacing-xl);
+}
+
+.risk-stat {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.risk-stat.high-risk {
+    border-color: var(--color-red);
+    background-color: var(--color-red-light);
+}
+
+.risk-stat.medium-risk {
+    border-color: var(--color-yellow);
+    background-color: var(--color-yellow-light);
+}
+
+.risk-stat.low-risk {
+    border-color: var(--color-green);
+    background-color: var(--color-green-light);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: var(--spacing-sm);
+}
+
+.risk-stat.high-risk .stat-value {
+    color: var(--color-red);
+}
+
+.risk-stat.medium-risk .stat-value {
+    color: #856404;
+}
+
+.risk-stat.low-risk .stat-value {
+    color: var(--color-green);
+}
+
+.stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.risk-distribution {
+    margin-top: var(--spacing-lg);
+}
+
+.risk-distribution h4 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+}
+
+.distribution-bar {
+    height: 24px;
+    background-color: var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: var(--spacing-sm);
+}
+
+.distribution-segment {
+    height: 100%;
+    transition: width var(--transition-normal) ease;
+}
+
+.distribution-segment.high-risk {
+    background-color: var(--color-red);
+}
+
+.distribution-segment.medium-risk {
+    background-color: var(--color-yellow);
+}
+
+.distribution-segment.low-risk {
+    background-color: var(--color-green);
+}
+
+.distribution-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    color: var(--color-secondary);
+}
+
+/* 审查结果列表样式 */
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.result-item {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    transition: all var(--transition-normal) ease;
+}
+
+.result-item[data-risk="high"] {
+    border-left: 4px solid var(--color-red);
+}
+
+.result-item[data-risk="medium"] {
+    border-left: 4px solid var(--color-yellow);
+}
+
+.result-item[data-risk="low"] {
+    border-left: 4px solid var(--color-green);
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.result-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.result-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-high {
+    background-color: var(--color-red-light);
+    color: var(--color-red);
+}
+
+.badge-medium {
+    background-color: var(--color-yellow-light);
+    color: #856404;
+}
+
+.badge-low {
+    background-color: var(--color-green-light);
+    color: var(--color-green);
+}
+
+.result-clause,
+.result-page {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+.result-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.result-summary h4 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+}
+
+.result-stats {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+}
+
+.result-stat {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+/* 规则信息样式 */
+.rule-info {
+    background-color: var(--color-light);
+    padding: var(--spacing-md);
+    border-radius: 6px;
+    border-left: 4px solid var(--color-border);
+}
+
+.rule-meta {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+.rule-version {
+    background-color: var(--color-white);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--color-primary);
+}
+
+.rule-quote {
+    margin-top: var(--spacing-md);
+}
+
+.rule-quote h6 {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+}
+
+.rule-quote blockquote {
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-left: 4px solid var(--color-primary-light);
+    font-style: normal;
+    color: var(--color-secondary);
+    margin: var(--spacing-sm) 0;
+}
+
+.confidence-value {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.result-details {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.details-content {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.details-section h5 {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+}
+
+.original-position {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+.original-text blockquote {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-left: 4px solid var(--color-border);
+    font-style: italic;
+    color: var(--color-secondary);
+    margin: var(--spacing-sm) 0;
+}
+
+.evidence-chain {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 8px;
+}
+
+.evidence-step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.step-number {
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+}
+
+.step-info {
+    font-size: var(--font-size-xs);
+}
+
+.step-info strong {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--color-primary);
+}
+
+.evidence-arrow {
+    color: var(--color-secondary);
+    font-weight: 600;
+}
+
+.details-actions {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: flex-end;
+}
+
+/* 颜色语义说明 */
+.color-semantics {
+    margin-top: var(--spacing-md);
+}
+
+.color-item {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-radius: 8px;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+}
+
+.color-item.high-risk {
+    border-color: var(--color-red);
+}
+
+.color-item.medium-risk {
+    border-color: var(--color-yellow);
+}
+
+.color-item.low-risk {
+    border-color: var(--color-green);
+}
+
+.color-sample {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.color-item.high-risk .color-sample {
+    background-color: var(--color-red);
+}
+
+.color-item.medium-risk .color-sample {
+    background-color: var(--color-yellow);
+}
+
+.color-item.low-risk .color-sample {
+    background-color: var(--color-green);
+}
+
+.color-info h4 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+}
+
+.color-info p {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.color-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.color-info li {
+    font-size: var(--font-size-xs);
+    color: var(--color-secondary);
+    padding: var(--spacing-xs) 0;
+    position: relative;
+    padding-left: var(--spacing-md);
+}
+
+.color-info li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--color-primary);
+}
+
+/* 文档预览区域样式 */
+.document-preview-container {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--color-light);
+}
+
+.preview-header {
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.preview-info {
+    display: flex;
+    gap: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+.document-preview {
+    padding: var(--spacing-lg);
+    min-height: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: var(--color-white);
+}
+
+.preview-placeholder {
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.preview-placeholder p {
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-secondary);
+}
+
+.preview-mock {
+    margin-top: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--color-white);
+}
+
+.page-mock {
+    position: relative;
+    min-height: 350px;
+    background-color: #f9f9f9;
+}
+
+.page-header {
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 500;
+    text-align: center;
+}
+
+.page-content {
+    position: relative;
+    padding: var(--spacing-lg);
+}
+
+.mock-text {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #eee;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.highlight-area {
+    background-color: rgba(255, 193, 7, 0.3) !important;
+    border: 2px solid #ffc107 !important;
+    animation: highlightPulse 2s 1;
+}
+
+.preview-controls {
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: center;
+}
+
+.page-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.page-info {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+@keyframes highlightPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+/* 置信度说明 */
+.confidence-scale {
+    margin-bottom: var(--spacing-lg);
+}
+
+.scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+.scale-bar {
+    height: 12px;
+    background-color: var(--color-border);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+}
+
+.scale-fill {
+    height: 100%;
+}
+
+.scale-fill.low-confidence {
+    background-color: var(--color-red);
+    width: 60%;
+}
+
+.scale-fill.medium-confidence {
+    background-color: var(--color-yellow);
+    width: 20%;
+}
+
+.scale-fill.high-confidence {
+    background-color: var(--color-green);
+    width: 20%;
+}
+
+.confidence-guidelines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.guideline-item {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 6px;
+}
+
+.guideline-label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+@media (max-width: 768px) {
+    .risk-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .result-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+    
+    .result-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .result-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .result-stats {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .color-semantics {
+        grid-template-columns: 1fr;
+    }
+    
+    .evidence-chain {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .evidence-arrow {
+        transform: rotate(90deg);
+        margin: var(--spacing-xs) 0;
+    }
+}
+</style>
+
+{% block scripts %}
+<script>
+class ResultsManager {
+    constructor() {
+        this.results = [];
+        this.expandedItems = new Set();
+        this.init();
+    }
+    
+    init() {
+        this.loadResults();
+        this.setupEventListeners();
+        this.updateStatistics();
+    }
+    
+    async loadResults() {
+        try {
+            const response = await fetch('/api/review/results');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.results = data.data;
+                this.updateStatistics();
+            }
+        } catch (error) {
+            console.error('Failed to load results:', error);
+            this.showNotification('加载审查结果失败', 'error');
+        }
+    }
+    
+    setupEventListeners() {
+        // 刷新结果按钮
+        document.getElementById('refresh-results-btn').addEventListener('click', () => {
+            this.loadResults();
+        });
+        
+        // 展开/收起全部按钮
+        document.getElementById('toggle-all-btn').addEventListener('click', () => {
+            this.toggleAllDetails();
+        });
+        
+        // 导出报告按钮
+        document.getElementById('export-results-btn').addEventListener('click', () => {
+            this.exportResults();
+        });
+        
+        // 查看详情按钮
+        document.querySelectorAll('.toggle-details-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const resultId = e.target.dataset.resultId;
+                this.toggleDetails(resultId);
+            });
+        });
+        
+        // 证据链定位按钮
+        document.querySelectorAll('.evidence-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const resultId = e.target.dataset.resultId;
+                this.showEvidenceChain(resultId);
+            });
+        });
+        
+        // 高亮原文按钮
+        document.querySelectorAll('.highlight-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const resultId = e.target.dataset.resultId;
+                this.highlightOriginalText(resultId);
+            });
+        });
+        
+        // 专家复核按钮
+        document.querySelectorAll('.expert-review-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const resultId = e.target.dataset.resultId;
+                this.startExpertReview(resultId);
+            });
+        });
+        
+        // 文档预览控制按钮
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            this.adjustZoom(0.1);
+        });
+        
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            this.adjustZoom(-0.1);
+        });
+        
+        document.getElementById('reset-view-btn').addEventListener('click', () => {
+            this.resetView();
+        });
+        
+        document.getElementById('prev-page-btn').addEventListener('click', () => {
+            this.navigatePage(-1);
+        });
+        
+        document.getElementById('next-page-btn').addEventListener('click', () => {
+            this.navigatePage(1);
+        });
+    }
+    
+    updateStatistics() {
+        // 计算各类风险数量
+        const highRiskCount = this.results.filter(r => r.risk_level === 'high').length;
+        const mediumRiskCount = this.results.filter(r => r.risk_level === 'medium').length;
+        const lowRiskCount = this.results.filter(r => r.risk_level === 'low').length;
+        const totalCount = this.results.length;
+        
+        // 更新统计显示
+        document.getElementById('high-risk-count').textContent = highRiskCount;
+        document.getElementById('medium-risk-count').textContent = mediumRiskCount;
+        document.getElementById('low-risk-count').textContent = lowRiskCount;
+        
+        // 计算百分比
+        const highPercent = totalCount > 0 ? (highRiskCount / totalCount * 100) : 0;
+        const mediumPercent = totalCount > 0 ? (mediumRiskCount / totalCount * 100) : 0;
+        const lowPercent = totalCount > 0 ? (lowRiskCount / totalCount * 100) : 0;
+        
+        // 更新分布图
+        document.getElementById('high-risk-bar').style.width = `${highPercent}%`;
+        document.getElementById('medium-risk-bar').style.width = `${mediumPercent}%`;
+        document.getElementById('low-risk-bar').style.width = `${lowPercent}%`;
+        
+        // 更新置信度颜色
+        this.updateConfidenceColors();
+    }
+    
+    updateConfidenceColors() {
+        document.querySelectorAll('.confidence-value').forEach(element => {
+            const confidence = parseFloat(element.dataset.value);
+            if (confidence >= 0.8) {
+                element.style.color = 'var(--color-green)';
+            } else if (confidence >= 0.6) {
+                element.style.color = 'var(--color-yellow)';
+            } else {
+                element.style.color = 'var(--color-red)';
+            }
+        });
+    }
+    
+    toggleDetails(resultId) {
+        const detailsElement = document.getElementById(`details-${resultId}`);
+        const toggleBtn = document.querySelector(`[data-result-id="${resultId}"].toggle-details-btn`);
+        
+        if (detailsElement.style.display === 'none') {
+            detailsElement.style.display = 'block';
+            toggleBtn.textContent = '收起详情';
+            this.expandedItems.add(resultId);
+        } else {
+            detailsElement.style.display = 'none';
+            toggleBtn.textContent = '查看详情';
+            this.expandedItems.delete(resultId);
+        }
+    }
+    
+    toggleAllDetails() {
+        const toggleAllBtn = document.getElementById('toggle-all-btn');
+        const isExpanding = toggleAllBtn.textContent.includes('展开');
+        
+        document.querySelectorAll('.toggle-details-btn').forEach(btn => {
+            const resultId = btn.dataset.resultId;
+            
+            if (isExpanding) {
+                document.getElementById(`details-${resultId}`).style.display = 'block';
+                btn.textContent = '收起详情';
+                this.expandedItems.add(resultId);
+            } else {
+                document.getElementById(`details-${resultId}`).style.display = 'none';
+                btn.textContent = '查看详情';
+                this.expandedItems.delete(resultId);
+            }
+        });
+        
+        toggleAllBtn.textContent = isExpanding ? '收起全部' : '展开全部';
+    }
+    
+    showEvidenceChain(resultId) {
+        const result = this.results.find(r => r.id === resultId);
+        if (!result) return;
+        
+        // 更新文档预览区域
+        this.updateDocumentPreview(result);
+        
+        // 滚动到文档预览区域
+        document.getElementById('document-preview').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'center'
+        });
+        
+        // 显示定位信息
+        const message = `定位到第 ${result.page} 页，坐标 (X: ${result.position.x}, Y: ${result.position.y})`;
+        this.showNotification(message, 'info');
+    }
+    
+    updateDocumentPreview(result) {
+        // 更新页面信息
+        document.getElementById('current-page').textContent = result.page;
+        document.getElementById('page-current').textContent = result.page;
+        
+        // 更新高亮区域信息
+        document.getElementById('highlighted-area').textContent = 
+            `第 ${result.page} 页 (${result.position.x}, ${result.position.y})`;
+        
+        // 创建高亮区域
+        const preview = document.getElementById('document-preview');
+        preview.innerHTML = `
+            <div class="preview-mock">
+                <div class="page-mock">
+                    <div class="page-header">招标文件示例 - 第 ${result.page} 页</div>
+                    <div class="page-content" id="page-content-${result.id}">
+                        <!-- 模拟文档内容 -->
+                        <div class="mock-text" style="top: 30px; left: 80px;">项目名称：智慧城市建设项目</div>
+                        <div class="mock-text" style="top: 60px; left: 80px;">招标编号：ZC-2024-001</div>
+                        <div class="mock-text" style="top: 90px; left: 80px;">发布日期：2024年1月15日</div>
+                        <div class="mock-text highlight-area" 
+                             style="top: ${result.position.y}px; left: ${result.position.x}px; 
+                                    width: ${result.position.width}px; height: ${result.position.height}px;"
+                             id="evidence-highlight-${result.id}">
+                            ${result.original_text}
+                        </div>
+                        <div class="mock-text" style="top: 200px; left: 80px;">页面其他内容...</div>
+                        <div class="mock-text" style="top: 230px; left: 80px;">此处为示例文档内容</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 高亮效果
+        const highlightElement = document.getElementById(`evidence-highlight-${result.id}`);
+        if (highlightElement) {
+            highlightElement.classList.add('highlight-area');
+        }
+    }
+    
+    highlightOriginalText(resultId) {
+        const result = this.results.find(r => r.id === resultId);
+        if (!result) return;
+        
+        // 更新文档预览区域
+        this.updateDocumentPreview(result);
+        
+        // 滚动到文档预览区域
+        document.getElementById('document-preview').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'center'
+        });
+        
+        // 在列表中高亮
+        const resultElement = document.querySelector(`[data-id="${resultId}"]`);
+        if (resultElement) {
+            resultElement.classList.add('highlighting');
+            setTimeout(() => {
+                resultElement.classList.remove('highlighting');
+            }, 2000);
+        }
+    }
+    
+    startExpertReview(resultId) {
+        // 跳转到专家复核页面
+        window.location.href = `/expert?result=${resultId}`;
+    }
+    
+    exportResults() {
+        // 模拟导出功能
+        const exportData = {
+            exportTime: new Date().toISOString(),
+            totalResults: this.results.length,
+            results: this.results.map(r => ({
+                clause_id: r.clause_id,
+                description: r.description,
+                risk_level: r.risk_level,
+                confidence: r.confidence,
+                page: r.page
+            }))
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `审查报告_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        this.showNotification('审查报告导出成功', 'success');
+    }
+    
+    adjustZoom(delta) {
+        const zoomElement = document.getElementById('zoom-level');
+        const currentZoom = parseFloat(zoomElement.textContent) / 100;
+        const newZoom = Math.max(0.5, Math.min(2, currentZoom + delta));
+        
+        zoomElement.textContent = `${(newZoom * 100).toFixed(0)}%`;
+        
+        // 实际应用中这里会调整文档预览的缩放比例
+        this.showNotification(`缩放调整为 ${(newZoom * 100).toFixed(0)}%`, 'info');
+    }
+    
+    resetView() {
+        document.getElementById('zoom-level').textContent = '100%';
+        this.showNotification('视图已重置', 'info');
+    }
+    
+    navigatePage(delta) {
+        const currentElement = document.getElementById('page-current');
+        const totalElement = document.getElementById('page-total');
+        let current = parseInt(currentElement.textContent);
+        const total = parseInt(totalElement.textContent);
+        
+        current = Math.max(1, Math.min(total, current + delta));
+        currentElement.textContent = current;
+        document.getElementById('current-page').textContent = current;
+        
+        this.showNotification(`切换到第 ${current} 页`, 'info');
+    }
+    
+    showNotification(message, type = 'info') {
+        // 使用全局工具函数
+        if (window.Utils && window.Utils.showNotification) {
+            window.Utils.showNotification(message, type);
+        } else {
+            alert(message);
+        }
+    }
+}
+
+// 添加高亮动画样式
+const highlightStyle = document.createElement('style');
+highlightStyle.textContent = `
+@keyframes highlightPulse {
+    0% { box-shadow: 0 0 0 0 rgba(26, 26, 26, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(26, 26, 26, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(26, 26, 26, 0); }
+}
+
+.highlighting {
+    animation: highlightPulse 2s;
+}
+
+.result-item.highlighting {
+    border-color: var(--color-primary) !important;
+}
+`;
+document.head.appendChild(highlightStyle);
+
+// 初始化结果管理器
+document.addEventListener('DOMContentLoaded', () => {
+    window.resultsManager = new ResultsManager();
+});
+</script>
+{% endblock %}
+{% endblock %}

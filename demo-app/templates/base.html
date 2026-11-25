@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - 招标文件AI审核系统演示版</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <h1>招标文件AI审核系统</h1>
+                        <span class="subtitle">脱敏演示版</span>
+                    </div>
+                    <nav class="main-nav">
+                        <ul>
+                            <li><a href="/" {% if request.url.path == '/' %}class="active"{% endif %}>首页</a></li>
+                            <li><a href="/review" {% if request.url.path == '/review' %}class="active"{% endif %}>审查流程</a></li>
+                            <li><a href="/results" {% if request.url.path == '/results' %}class="active"{% endif %}>审查结果</a></li>
+                            <li><a href="/expert" {% if request.url.path == '/expert' %}class="active"{% endif %}>专家复核</a></li>
+                            <li><a href="/metrics" {% if request.url.path == '/metrics' %}class="active"{% endif %}>指标看板</a></li>
+                        </ul>
+                    </nav>
+                    <div class="header-info">
+                        <span class="status-indicator">
+                            <span class="status-dot"></span>
+                            演示模式
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <div class="container">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-info">
+                        <p><strong>重要声明：</strong>本系统为简历项目一的脱敏复现演示版本，所有数据均为示例值，不包含实际业务信息。</p>
+                        <p>原系统为团队协作交付成果，演示版仅用于技术展示和个人项目呈现，不主张独立交付价值。</p>
+                    </div>
+                    <div class="footer-meta">
+                        <p>© 2024 招标文件AI审核系统演示版 | 技术栈：FastAPI + Jinja2 + 原生前端技术</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

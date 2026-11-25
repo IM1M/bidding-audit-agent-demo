@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: demo-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: demo-app/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Syntax check
+        run: python -m compileall -q .
+
+      - name: Start app and smoke test
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+          APP_PID=$!
+          echo "Waiting for server..."
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/api/document > /dev/null 2>&1; then
+              echo "Server is up"
+              break
+            fi
+            sleep 1
+          done
+          echo "--- GET / ---"
+          curl -fsS http://127.0.0.1:8000/ > /dev/null
+          echo "--- GET /review ---"
+          curl -fsS http://127.0.0.1:8000/review > /dev/null
+          echo "--- GET /api/document ---"
+          curl -fsS http://127.0.0.1:8000/api/document
+          echo ""
+          echo "--- GET /metrics ---"
+          curl -fsS http://127.0.0.1:8000/metrics > /dev/null
+          kill $APP_PID
+          echo "Smoke test passed"
+
+      - name: Dump server log on failure
+        if: failure()
+        run: cat uvicorn.log

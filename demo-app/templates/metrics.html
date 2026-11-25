@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* 指标看板 */
+.metrics-intro {
+    border-left: 3px solid var(--color-primary);
+    padding-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+.metrics-intro h2 { font-size: var(--font-size-2xl); font-weight: 600; margin-bottom: var(--spacing-sm); }
+.metrics-intro p { color: var(--color-secondary); font-size: var(--font-size-sm); line-height: 1.7; }
+
+.source-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-secondary);
+    border-radius: 6px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+.source-notice .notice-label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    padding-top: 2px;
+}
+.source-notice .notice-text { font-size: var(--font-size-sm); line-height: 1.7; color: var(--color-primary); }
+
+.metrics-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-md);
+}
+
+.metric-card { position: relative; }
+.metric-primary {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+.metric-primary .unit { font-size: var(--font-size-sm); font-weight: 400; color: var(--color-secondary); margin-left: 4px; }
+.metric-name { font-size: var(--font-size-sm); font-weight: 500; margin-top: var(--spacing-sm); }
+.metric-desc { font-size: var(--font-size-xs); color: var(--color-secondary); margin-top: var(--spacing-xs); line-height: 1.5; }
+
+.metric-breakdown {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+.breakdown-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--font-size-sm); }
+.breakdown-row .label { color: var(--color-secondary); }
+.breakdown-row .value { font-variant-numeric: tabular-nums; font-weight: 500; }
+
+.metric-tag {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    font-size: var(--font-size-xs);
+    color: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.metrics-footer-note {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--font-size-xs);
+    color: var(--color-secondary);
+    line-height: 1.7;
+}
+</style>
+
+<div class="metrics-intro">
+    <h2>核心指标看板</h2>
+    <p>展示招标文件 AI 审核系统的关键性能与成本指标。所有数值为示例值，用于说明指标体系与展示方式。</p>
+</div>
+
+<div class="source-notice">
+    <span class="notice-label">来源说明</span>
+    <span class="notice-text">
+        以下指标为<strong>原系统团队协作交付成果</strong>，非个人独立实现；本演示版为脱敏复现，仅展示指标结构与口径，
+        所列数值为示例值，不代表复现版实测结果。实际系统性能基于团队协同开发与实际业务数据验证。
+    </span>
+</div>
+
+<!-- 效率与质量 -->
+<h3 class="metrics-section-title">效率与质量</h3>
+<div class="grid grid-2 gap-lg" style="margin-bottom: var(--spacing-xl);">
+    <div class="card metric-card">
+        <span class="metric-tag">示例值</span>
+        <div class="metric-primary">{{ '%.1f'|format(metrics.review_time.end_to_end / 60) }}<span class="unit">分钟</span></div>
+        <div class="metric-name">端到端审查时长</div>
+        <div class="metric-desc">单份招标文件从投入到产出完整报告的总耗时</div>
+        <div class="metric-breakdown">
+            <div class="breakdown-row">
+                <span class="label">自动审查环节</span>
+                <span class="value">{{ metrics.review_time.auto_review }} {{ metrics.review_time.unit }}</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="label">端到端全流程</span>
+                <span class="value">{{ metrics.review_time.end_to_end }} {{ metrics.review_time.unit }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card metric-card">
+        <span class="metric-tag">示例值</span>
+        <div class="metric-primary">{{ '%.1f'|format(metrics.accuracy.ai_accuracy * 100) }}<span class="unit">%</span></div>
+        <div class="metric-name">AI 审查准确率</div>
+        <div class="metric-desc">以专家复核结论为基准的审查结论一致比例</div>
+        <div class="metric-breakdown">
+            <div class="breakdown-row">
+                <span class="label">AI 审查准确率</span>
+                <span class="value">{{ '%.1f'|format(metrics.accuracy.ai_accuracy * 100) }}%</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="label">跨专家一致率</span>
+                <span class="value">{{ '%.1f'|format(metrics.accuracy.expert_consistency * 100) }}%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 定位精度与成本 -->
+<h3 class="metrics-section-title">定位精度与成本</h3>
+<div class="grid grid-2 gap-lg">
+    <div class="card metric-card">
+        <span class="metric-tag">示例值</span>
+        <div class="metric-primary">{{ '%.1f'|format(metrics.positioning_accuracy.clause_positioning * 100) }}<span class="unit">%</span></div>
+        <div class="metric-name">条款定位准确率</div>
+        <div class="metric-desc">结论可回溯到原文条款与页面位置的准确比例</div>
+        <div class="metric-breakdown">
+            <div class="breakdown-row">
+                <span class="label">条款级定位</span>
+                <span class="value">{{ '%.1f'|format(metrics.positioning_accuracy.clause_positioning * 100) }}%</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="label">文本级定位</span>
+                <span class="value">{{ '%.1f'|format(metrics.positioning_accuracy.text_positioning * 100) }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card metric-card">
+        <span class="metric-tag">示例值</span>
+        <div class="metric-primary">{{ metrics.cost.cost_per_doc }}<span class="unit">USD / 份</span></div>
+        <div class="metric-name">单份文档处理成本</div>
+        <div class="metric-desc">单份招标文件完成全流程审核的模型调用成本</div>
+        <div class="metric-breakdown">
+            <div class="breakdown-row">
+                <span class="label">单份 Token 消耗</span>
+                <span class="value">{{ '{:,}'.format(metrics.cost.tokens_per_doc) }} tokens</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="label">单份成本</span>
+                <span class="value">{{ metrics.cost.cost_per_doc }} {{ metrics.cost.unit }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="metrics-footer-note">
+    指标口径说明：准确率以专家复核结论为基准；定位精度按条款级与文本级分别统计；成本按单份文档的模型调用量折算。
+    上述数值均为示例，用于展示指标体系，不构成对任何系统的性能承诺。
+</div>
+{% endblock %}

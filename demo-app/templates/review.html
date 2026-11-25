@@ -1,0 +1,1006 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid gap-lg">
+    <!-- 页面标题 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">六节点审核流水线</h2>
+            <p class="card-subtitle">FR-02：流水线可视化与节点级重试</p>
+        </div>
+        <div class="card-content">
+            <p>本页面演示六节点AI审核流水线的完整工作流程，展示各节点的状态、耗时和重试机制。</p>
+        </div>
+    </div>
+
+    <!-- 流水线控制面板 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">审查控制</h3>
+            <div class="flex gap-sm">
+                <span class="badge" id="review-status-badge">等待开始</span>
+                <span class="badge" id="total-time-badge">总耗时: 0秒</span>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="control-panel grid grid-2 gap-md">
+                <div class="control-section">
+                    <h4>审查操作</h4>
+                    <div class="flex gap-md">
+                        <button class="btn btn-primary" id="start-review-btn">
+                            开始审查
+                        </button>
+                        <button class="btn btn-secondary" id="reset-review-btn">
+                            重置流程
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h4>模拟设置</h4>
+                    <div class="flex gap-md">
+                        <div class="simulation-control">
+                            <label for="simulation-speed">模拟速度</label>
+                            <select id="simulation-speed" class="form-select">
+                                <option value="slow">慢速 (5秒/节点)</option>
+                                <option value="normal" selected>正常 (3秒/节点)</option>
+                                <option value="fast">快速 (1秒/节点)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 六节点流水线可视化 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">六节点流水线</h3>
+            <p class="card-subtitle">文档解析 → 条款抽取 → 双分支判定 → 证据绑定 → 分级报告 → 专家复核</p>
+        </div>
+        <div class="card-content">
+            <div class="pipeline-container">
+                <!-- 流水线时间轴 -->
+                <div class="pipeline-timeline">
+                    <div class="timeline-start">开始</div>
+                    <div class="timeline-end">完成</div>
+                    <div class="timeline-progress">
+                        <div class="timeline-fill" id="timeline-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 节点网格 -->
+                <div class="pipeline-nodes grid grid-3 gap-lg">
+                    <!-- 节点1：文档解析 -->
+                    <div class="pipeline-node" data-node-id="document_parsing">
+                        <div class="node-header">
+                            <div class="node-number">01</div>
+                            <h4>文档解析</h4>
+                        </div>
+                        <div class="node-content">
+                            <p>OCR识别文档内容，提取文本结构</p>
+                            <div class="node-status">
+                                <span class="status-indicator" data-status="waiting">等待中</span>
+                                <span class="node-time" data-time="0">耗时: 0秒</span>
+                            </div>
+                            <div class="node-actions">
+                                <button class="btn btn-sm btn-secondary node-retry-btn" disabled>重试</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 节点2：条款抽取 -->
+                    <div class="pipeline-node" data-node-id="clause_extraction">
+                        <div class="node-header">
+                            <div class="node-number">02</div>
+                            <h4>条款抽取</h4>
+                        </div>
+                        <div class="node-content">
+                            <p>智能识别招标条款，结构化存储</p>
+                            <div class="node-status">
+                                <span class="status-indicator" data-status="waiting">等待中</span>
+                                <span class="node-time" data-time="0">耗时: 0秒</span>
+                            </div>
+                            <div class="node-actions">
+                                <button class="btn btn-sm btn-secondary node-retry-btn" disabled>重试</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 节点3：双分支判定 -->
+                    <div class="pipeline-node" data-node-id="dual_branch_judgment">
+                        <div class="node-header">
+                            <div class="node-number">03</div>
+                            <h4>双分支判定</h4>
+                        </div>
+                        <div class="node-content">
+                            <p>规则匹配与LLM推理双路并行审查</p>
+                            <div class="node-status">
+                                <span class="status-indicator" data-status="waiting">等待中</span>
+                                <span class="node-time" data-time="0">耗时: 0秒</span>
+                            </div>
+                            <div class="node-actions">
+                                <button class="btn btn-sm btn-secondary node-retry-btn" disabled>重试</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 节点4：证据绑定 -->
+                    <div class="pipeline-node" data-node-id="evidence_binding">
+                        <div class="node-header">
+                            <div class="node-number">04</div>
+                            <h4>证据绑定</h4>
+                        </div>
+                        <div class="node-content">
+                            <p>关联审查结论与原文位置</p>
+                            <div class="node-status">
+                                <span class="status-indicator" data-status="waiting">等待中</span>
+                                <span class="node-time" data-time="0">耗时: 0秒</span>
+                            </div>
+                            <div class="node-actions">
+                                <button class="btn btn-sm btn-secondary node-retry-btn" disabled>重试</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 节点5：分级报告 -->
+                    <div class="pipeline-node" data-node-id="grading_report">
+                        <div class="node-header">
+                            <div class="node-number">05</div>
+                            <h4>分级报告</h4>
+                        </div>
+                        <div class="node-content">
+                            <p>生成红黄绿三级风险报告</p>
+                            <div class="node-status">
+                                <span class="status-indicator" data-status="waiting">等待中</span>
+                                <span class="node-time" data-time="0">耗时: 0秒</span>
+                            </div>
+                            <div class="node-actions">
+                                <button class="btn btn-sm btn-secondary node-retry-btn" disabled>重试</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 节点6：专家复核 -->
+                    <div class="pipeline-node" data-node-id="expert_review">
+                        <div class="node-header">
+                            <div class="node-number">06</div>
+                            <h4>专家复核</h4>
+                        </div>
+                        <div class="node-content">
+                            <p>人工审核确认与修正</p>
+                            <div class="node-status">
+                                <span class="status-indicator" data-status="waiting">等待中</span>
+                                <span class="node-time" data-time="0">耗时: 0秒</span>
+                            </div>
+                            <div class="node-actions">
+                                <button class="btn btn-sm btn-secondary node-retry-btn" disabled>重试</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 节点依赖说明 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">节点依赖关系</h3>
+        </div>
+        <div class="card-content">
+            <div class="dependency-diagram">
+                <div class="dependency-flow">
+                    <div class="dependency-step">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <h4>文档解析</h4>
+                            <p>前置条件：无</p>
+                        </div>
+                    </div>
+                    <div class="dependency-arrow">→</div>
+                    <div class="dependency-step">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <h4>条款抽取</h4>
+                            <p>前置条件：文档解析完成</p>
+                        </div>
+                    </div>
+                    <div class="dependency-arrow">→</div>
+                    <div class="dependency-step">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <h4>双分支判定</h4>
+                            <p>前置条件：条款抽取完成</p>
+                        </div>
+                    </div>
+                    <div class="dependency-arrow">→</div>
+                    <div class="dependency-step">
+                        <div class="step-number">4</div>
+                        <div class="step-info">
+                            <h4>证据绑定</h4>
+                            <p>前置条件：双分支判定完成</p>
+                        </div>
+                    </div>
+                    <div class="dependency-arrow">→</div>
+                    <div class="dependency-step">
+                        <div class="step-number">5</div>
+                        <div class="step-info">
+                            <h4>分级报告</h4>
+                            <p>前置条件：证据绑定完成</p>
+                        </div>
+                    </div>
+                    <div class="dependency-arrow">→</div>
+                    <div class="dependency-step">
+                        <div class="step-number">6</div>
+                        <div class="step-info">
+                            <h4>专家复核</h4>
+                            <p>前置条件：分级报告完成</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="dependency-note">
+                <strong>依赖说明：</strong>每个节点必须在前序节点完成后才能开始执行，系统自动管理依赖关系。
+                节点失败时可单独重试，无需重新运行整条流水线。
+            </p>
+        </div>
+    </div>
+
+    <!-- 模拟日志 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">审查日志</h3>
+            <button class="btn btn-sm btn-secondary" id="clear-logs-btn">清空日志</button>
+        </div>
+        <div class="card-content">
+            <div class="log-container" id="log-container">
+                <div class="log-entry">
+                    <span class="log-time">[系统]</span>
+                    <span class="log-message">审查流水线已初始化，等待开始指令</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pipeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.pipeline-timeline {
+    position: relative;
+    height: 60px;
+    background-color: var(--color-light);
+    border-radius: 8px;
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.timeline-start,
+.timeline-end {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+.timeline-progress {
+    position: absolute;
+    top: 50%;
+    left: 50px;
+    right: 50px;
+    height: 4px;
+    background-color: var(--color-border);
+    border-radius: 2px;
+    transform: translateY(-50%);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.timeline-fill {
+    height: 100%;
+    background-color: var(--color-primary);
+    transition: width var(--transition-normal) ease;
+    width: 0%;
+}
+
+.pipeline-nodes {
+    margin-top: var(--spacing-lg);
+}
+
+.pipeline-node {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    transition: all var(--transition-normal) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.pipeline-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pipeline-node[data-status="completed"] {
+    border-color: var(--color-green);
+    background-color: var(--color-green-light);
+}
+
+.pipeline-node[data-status="processing"] {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.1);
+}
+
+.pipeline-node[data-status="failed"] {
+    border-color: var(--color-red);
+    background-color: var(--color-red-light);
+}
+
+.pipeline-node[data-status="waiting"] {
+    opacity: 0.8;
+}
+
+.node-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.node-number {
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+}
+
+.node-header h4 {
+    font-size: var(--font-size-lg);
+    margin: 0;
+}
+
+.node-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.node-content p {
+    color: var(--color-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    min-height: 40px;
+}
+
+.node-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: var(--spacing-sm) 0;
+}
+
+.status-indicator {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-indicator[data-status="waiting"] {
+    background-color: var(--color-border);
+    color: var(--color-secondary);
+}
+
+.status-indicator[data-status="processing"] {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.status-indicator[data-status="completed"] {
+    background-color: var(--color-green);
+    color: var(--color-white);
+}
+
+.status-indicator[data-status="failed"] {
+    background-color: var(--color-red);
+    color: var(--color-white);
+}
+
+.node-time {
+    font-size: var(--font-size-xs);
+    color: var(--color-secondary);
+}
+
+.node-actions {
+    margin-top: var(--spacing-sm);
+}
+
+.control-panel {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 6px;
+}
+
+.control-section h4 {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+}
+
+.simulation-control {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.simulation-control label {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+.form-select {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    background-color: var(--color-white);
+    transition: border-color var(--transition-normal) ease;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.dependency-diagram {
+    padding: var(--spacing-lg);
+    background-color: var(--color-light);
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+}
+
+.dependency-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    overflow-x: auto;
+    padding: var(--spacing-sm) 0;
+}
+
+.dependency-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 100px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+}
+
+.step-info {
+    text-align: center;
+}
+
+.step-info h4 {
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--color-primary);
+}
+
+.step-info p {
+    font-size: var(--font-size-xs);
+    color: var(--color-secondary);
+    margin: 0;
+}
+
+.dependency-arrow {
+    color: var(--color-secondary);
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+}
+
+.dependency-note {
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+}
+
+.log-container {
+    height: 200px;
+    overflow-y: auto;
+    background-color: var(--color-light);
+    border-radius: 4px;
+    padding: var(--spacing-md);
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: var(--font-size-sm);
+}
+
+.log-entry {
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-time {
+    color: var(--color-secondary);
+    min-width: 100px;
+}
+
+.log-message {
+    color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+    .pipeline-nodes {
+        grid-template-columns: 1fr;
+    }
+    
+    .dependency-flow {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-md);
+    }
+    
+    .dependency-arrow {
+        transform: rotate(90deg);
+        margin: var(--spacing-xs) 0;
+    }
+    
+    .control-panel {
+        grid-template-columns: 1fr;
+    }
+    
+    .node-header h4 {
+        font-size: var(--font-size-base);
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+class ReviewPipeline {
+    constructor() {
+        this.simulationSpeed = 'normal';
+        this.reviewState = 'not_started';
+        this.nodes = [];
+        this.totalTime = 0;
+        this.logEntries = [];
+        this.intervalId = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.loadInitialData();
+        this.setupEventListeners();
+        this.connectWebSocket();
+        this.addLog('审查流水线已初始化，等待开始指令');
+    }
+
+    connectWebSocket() {
+        // 建立实时状态推送通道；失败时降级为纯 AJAX 模式，不影响审查流程
+        try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/review`;
+            this.ws = new WebSocket(wsUrl);
+
+            this.ws.onopen = () => {
+                this.addLog('实时状态通道已连接');
+            };
+
+            this.ws.onmessage = (event) => {
+                let msg;
+                try {
+                    msg = JSON.parse(event.data);
+                } catch (e) {
+                    console.error('Invalid WebSocket message:', e);
+                    return;
+                }
+                if (msg.type === 'node_status' && msg.node_id) {
+                    // 来自服务端的权威状态，第三个参数为 true 表示不再回传，避免回环
+                    this.updateNodeStatus(msg.node_id, msg.status, true);
+                }
+                if (msg.type === 'progress' && msg.data && msg.data.review_state) {
+                    // 仅展示进度，不覆盖本地审查状态：服务端可能残留上次会话的状态
+                    this.updateUI();
+                }
+            };
+
+            this.ws.onerror = () => {
+                this.addLog('实时通道连接异常，已切换为轮询模式', 'error');
+            };
+
+            this.ws.onclose = () => {
+                this.addLog('实时通道已断开，使用本地状态更新');
+            };
+        } catch (error) {
+            console.error('WebSocket init failed:', error);
+            this.addLog('实时通道不可用，使用本地状态更新', 'error');
+        }
+    }
+
+    async reportNodeStatus(nodeId, status) {
+        // 将本地节点状态上报服务端，供 WebSocket 广播给其他客户端（1.9 状态同步）
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+        const timeElement = nodeElement ? nodeElement.querySelector('.node-time') : null;
+        const duration = timeElement ? (parseInt(timeElement.dataset.time, 10) || 0) : 0;
+        try {
+            const response = await fetch(`/api/nodes/${nodeId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: status, duration: duration })
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Failed to report node status:', error);
+            this.addLog(`状态同步失败: ${error.message}`, 'error');
+        }
+    }
+    
+    async loadInitialData() {
+        try {
+            const response = await fetch('/api/review/progress');
+            const data = await response.json();
+            
+            if (data.success) {
+                // 前端始终从初始态开始，避免服务端残留状态锁死「开始审查」按钮
+                this.reviewState = 'not_started';
+                // 用 node_states 的键名作为 pipeline id，与模板的 data-node-id 对应
+                this.nodes = Object.entries(data.data.node_states).map(([key, node]) => ({
+                    ...node,
+                    id: key,
+                    status: 'waiting',
+                    duration: 0
+                }));
+                this.updateUI();
+            }
+        } catch (error) {
+            console.error('Failed to load review progress:', error);
+        }
+    }
+    
+    setupEventListeners() {
+        // 开始审查按钮
+        document.getElementById('start-review-btn').addEventListener('click', () => {
+            this.startReview();
+        });
+        
+        // 重置按钮
+        document.getElementById('reset-review-btn').addEventListener('click', () => {
+            this.resetReview();
+        });
+        
+        // 模拟速度选择
+        document.getElementById('simulation-speed').addEventListener('change', (e) => {
+            this.simulationSpeed = e.target.value;
+            this.addLog(`模拟速度已调整为: ${e.target.options[e.target.selectedIndex].text}`);
+        });
+        
+        // 清空日志按钮
+        document.getElementById('clear-logs-btn').addEventListener('click', () => {
+            this.clearLogs();
+        });
+        
+        // 节点重试按钮
+        document.querySelectorAll('.node-retry-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const node = e.target.closest('.pipeline-node');
+                const nodeId = node.dataset.nodeId;
+                this.retryNode(nodeId);
+            });
+        });
+    }
+    
+    async startReview() {
+        if (this.reviewState === 'in_progress') {
+            this.addLog('审查已在进行中，请勿重复操作');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/review/start', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.reviewState = 'in_progress';
+                this.addLog('审查已开始，启动六节点流水线...');
+                this.updateUI();
+                this.startSimulation();
+            }
+        } catch (error) {
+            console.error('Failed to start review:', error);
+            this.addLog(`开始审查失败: ${error.message}`, 'error');
+        }
+    }
+    
+    startSimulation() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
+        
+        let currentIndex = 0;
+        const speedMap = {
+            slow: 5000,
+            normal: 3000,
+            fast: 1000
+        };
+        
+        const intervalTime = speedMap[this.simulationSpeed] || 3000;
+        
+        this.intervalId = setInterval(() => {
+            if (currentIndex < this.nodes.length) {
+                const node = this.nodes[currentIndex];
+                this.simulateNodeProgress(node.id, currentIndex + 1);
+                currentIndex++;
+            } else {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+                this.reviewState = 'completed';
+                this.addLog('审查流程已完成！');
+                this.updateUI();
+            }
+        }, intervalTime);
+    }
+    
+    simulateNodeProgress(nodeId, nodeNumber) {
+        const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+        if (!nodeElement) return;
+        
+        // 更新节点状态为处理中
+        this.updateNodeStatus(nodeId, 'processing');
+        this.addLog(`节点${nodeNumber}: ${nodeElement.querySelector('h4').textContent} 开始处理`);
+        
+        // 模拟处理时间
+        const processingTime = this.simulationSpeed === 'fast' ? 1 : 
+                              this.simulationSpeed === 'slow' ? 5 : 3;
+        
+        let time = 0;
+        const timer = setInterval(() => {
+            time++;
+            this.updateNodeTime(nodeId, time);
+            
+            if (time >= processingTime) {
+                clearInterval(timer);
+                
+                // 随机决定成功或失败（演示失败场景）
+                const isSuccess = Math.random() > 0.2; // 80%成功率
+                
+                if (isSuccess) {
+                    this.updateNodeStatus(nodeId, 'completed');
+                    this.addLog(`节点${nodeNumber}: ${nodeElement.querySelector('h4').textContent} 处理完成`);
+                } else {
+                    this.updateNodeStatus(nodeId, 'failed');
+                    this.addLog(`节点${nodeNumber}: ${nodeElement.querySelector('h4').textContent} 处理失败，可重试`, 'error');
+                }
+                
+                // 更新总进度
+                this.updateTotalProgress();
+            }
+        }, 1000);
+    }
+    
+    updateNodeStatus(nodeId, status, fromRemote = false) {
+        const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+        if (!nodeElement) return;
+
+        // 幂等：状态未变化时不重复更新与广播
+        if (nodeElement.dataset.status === status) return;
+
+        nodeElement.dataset.status = status;
+
+        const statusIndicator = nodeElement.querySelector('.status-indicator');
+        statusIndicator.dataset.status = status;
+
+        switch (status) {
+            case 'processing':
+                statusIndicator.textContent = '进行中';
+                break;
+            case 'completed':
+                statusIndicator.textContent = '已完成';
+                break;
+            case 'failed':
+                statusIndicator.textContent = '失败';
+                break;
+            default:
+                statusIndicator.textContent = '等待中';
+        }
+
+        const retryBtn = nodeElement.querySelector('.node-retry-btn');
+        if (status === 'failed') {
+            retryBtn.disabled = false;
+        } else {
+            retryBtn.disabled = true;
+        }
+
+        // 本地发起的状态变更才上报服务端，避免与 WebSocket 广播形成回环
+        if (!fromRemote) {
+            this.reportNodeStatus(nodeId, status);
+        }
+    }
+    
+    updateNodeTime(nodeId, time) {
+        const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+        if (!nodeElement) return;
+        
+        const timeElement = nodeElement.querySelector('.node-time');
+        timeElement.dataset.time = time;
+        timeElement.textContent = `耗时: ${time}秒`;
+    }
+    
+    updateTotalProgress() {
+        const completedNodes = this.nodes.filter((_, index) => {
+            const nodeElement = document.querySelector(`[data-node-id="${this.nodes[index].id}"]`);
+            return nodeElement && nodeElement.dataset.status === 'completed';
+        }).length;
+        
+        const totalNodes = this.nodes.length;
+        const progress = (completedNodes / totalNodes) * 100;
+        
+        document.getElementById('timeline-fill').style.width = `${progress}%`;
+        
+        if (completedNodes === totalNodes) {
+            document.getElementById('review-status-badge').textContent = '已完成';
+            document.getElementById('review-status-badge').className = 'badge badge-green';
+        } else if (completedNodes > 0) {
+            document.getElementById('review-status-badge').textContent = '进行中';
+            document.getElementById('review-status-badge').className = 'badge';
+        }
+        
+        this.totalTime += 1;
+        document.getElementById('total-time-badge').textContent = `总耗时: ${this.totalTime}秒`;
+    }
+    
+    async retryNode(nodeId) {
+        try {
+            const response = await fetch(`/api/nodes/${nodeId}/retry`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.addLog(`节点重试已开始: ${data.message}`);
+                this.simulateNodeProgress(nodeId, this.getNodeNumber(nodeId));
+            }
+        } catch (error) {
+            console.error('Failed to retry node:', error);
+            this.addLog(`节点重试失败: ${error.message}`, 'error');
+        }
+    }
+    
+    getNodeNumber(nodeId) {
+        const nodeMap = {
+            'document_parsing': 1,
+            'clause_extraction': 2,
+            'dual_branch_judgment': 3,
+            'evidence_binding': 4,
+            'grading_report': 5,
+            'expert_review': 6
+        };
+        
+        return nodeMap[nodeId] || 0;
+    }
+    
+    resetReview() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        
+        this.reviewState = 'not_started';
+        this.totalTime = 0;
+        this.nodes.forEach(node => {
+            this.updateNodeStatus(node.id, 'waiting');
+            this.updateNodeTime(node.id, 0);
+        });
+        
+        document.getElementById('timeline-fill').style.width = '0%';
+        document.getElementById('review-status-badge').textContent = '等待开始';
+        document.getElementById('review-status-badge').className = 'badge';
+        document.getElementById('total-time-badge').textContent = '总耗时: 0秒';
+        
+        this.addLog('审查流程已重置');
+    }
+    
+    addLog(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const logContainer = document.getElementById('log-container');
+        
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        let timeClass = 'log-time';
+        if (type === 'error') {
+            timeClass += ' error';
+        }
+        
+        logEntry.innerHTML = `
+            <span class="${timeClass}">[${timestamp}]</span>
+            <span class="log-message">${message}</span>
+        `;
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+        
+        this.logEntries.push({ time: timestamp, message, type });
+    }
+    
+    clearLogs() {
+        const logContainer = document.getElementById('log-container');
+        logContainer.innerHTML = '';
+        this.logEntries = [];
+        this.addLog('日志已清空');
+    }
+    
+    updateUI() {
+        // 更新全局状态显示
+        const statusBadge = document.getElementById('review-status-badge');
+        switch (this.reviewState) {
+            case 'in_progress':
+                statusBadge.textContent = '进行中';
+                statusBadge.className = 'badge';
+                break;
+            case 'completed':
+                statusBadge.textContent = '已完成';
+                statusBadge.className = 'badge badge-green';
+                break;
+            default:
+                statusBadge.textContent = '等待开始';
+                statusBadge.className = 'badge';
+        }
+    }
+}
+
+// 初始化流水线
+document.addEventListener('DOMContentLoaded', () => {
+    window.pipeline = new ReviewPipeline();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* 专家复核工作台 */
+.expert-intro {
+    border-left: 3px solid var(--color-primary);
+    padding-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+.expert-intro h2 { font-size: var(--font-size-2xl); font-weight: 600; margin-bottom: var(--spacing-sm); }
+.expert-intro p { color: var(--color-secondary); font-size: var(--font-size-sm); line-height: 1.7; }
+
+.expert-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+}
+
+/* 待复核列表 */
+.review-queue { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.queue-item {
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast) ease, background-color var(--transition-fast) ease;
+    background-color: var(--color-white);
+}
+.queue-item:hover { border-color: var(--color-secondary); }
+.queue-item.active { border-color: var(--color-primary); background-color: var(--color-light); }
+.queue-item .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xs); }
+.queue-item .q-id { font-size: var(--font-size-xs); color: var(--color-secondary); font-variant-numeric: tabular-nums; }
+.queue-item .q-title { font-size: var(--font-size-sm); line-height: 1.5; }
+.queue-item .q-reviewed { font-size: var(--font-size-xs); color: var(--color-green); margin-top: var(--spacing-xs); }
+
+/* 工作区 */
+.workbench-empty {
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--color-secondary);
+    font-size: var(--font-size-sm);
+}
+.workbench-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.workbench-header h3 { font-size: var(--font-size-lg); font-weight: 600; }
+
+/* 对比视图 */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.compare-col { border: 1px solid var(--color-border); border-radius: 6px; padding: var(--spacing-md); background-color: var(--color-white); }
+.compare-col.no-edit { background-color: var(--color-light); }
+.compare-label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-sm);
+    display: block;
+}
+.compare-value { font-size: var(--font-size-sm); line-height: 1.6; }
+.compare-col textarea {
+    width: 100%;
+    min-height: 96px;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: var(--spacing-sm);
+    resize: vertical;
+    transition: border-color var(--transition-fast) ease;
+}
+.compare-col textarea:focus { outline: none; border-color: var(--color-primary); }
+
+/* 表单字段 */
+.field { margin-bottom: var(--spacing-lg); }
+.field-label { display: block; font-size: var(--font-size-sm); font-weight: 500; margin-bottom: var(--spacing-sm); }
+.field-label .required { color: var(--color-red); margin-left: 2px; }
+.field-hint { font-size: var(--font-size-xs); color: var(--color-secondary); margin-top: var(--spacing-xs); }
+.field textarea {
+    width: 100%;
+    min-height: 72px;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: var(--spacing-sm);
+    resize: vertical;
+    transition: border-color var(--transition-fast) ease;
+}
+.field textarea:focus { outline: none; border-color: var(--color-primary); }
+.field.invalid textarea { border-color: var(--color-red); }
+.field-error { display: none; font-size: var(--font-size-xs); color: var(--color-red); margin-top: var(--spacing-xs); }
+.field.invalid .field-error { display: block; }
+
+/* 证据参考 */
+.evidence-ref {
+    background-color: var(--color-light);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+.evidence-ref .ref-label { font-size: var(--font-size-xs); color: var(--color-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: var(--spacing-xs); }
+.evidence-ref .ref-quote { font-size: var(--font-size-sm); line-height: 1.6; }
+
+.submit-bar { display: flex; align-items: center; gap: var(--spacing-md); border-top: 1px solid var(--color-border); padding-top: var(--spacing-lg); }
+.submit-note { font-size: var(--font-size-xs); color: var(--color-secondary); }
+
+@media (max-width: 900px) {
+    .expert-layout { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="expert-intro">
+    <h2>专家复核工作台</h2>
+    <p>对 AI 审查结论进行人工复核。修改结论时必须填写修正理由与依据条款，提交前系统会逐项校验。所有数据为示例值，原系统为团队协作交付成果。</p>
+</div>
+
+<div class="expert-layout">
+    <!-- 待复核结论列表 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">待复核结论</h3>
+            <p class="card-subtitle">共 {{ results|length }} 条 · 点击查看与复核</p>
+        </div>
+        <div class="card-content">
+            <ul class="review-queue" id="review-queue">
+                {% for r in results %}
+                <li class="queue-item" data-result-id="{{ r.id }}">
+                    <div class="q-meta">
+                        <span class="badge badge-{{ 'red' if r.risk_level == 'high' else ('yellow' if r.risk_level == 'medium' else 'green') }}">
+                            {{ '高风险' if r.risk_level == 'high' else ('中风险' if r.risk_level == 'medium' else '低风险') }}
+                        </span>
+                        <span class="q-id">{{ r.id }}</span>
+                    </div>
+                    <div class="q-title">{{ r.description }}</div>
+                    {% if r.id in reviewed %}
+                    <div class="q-reviewed">已复核提交</div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- 复核工作区 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">复核工作区</h3>
+            <p class="card-subtitle">复核前后对比 · 必填项校验</p>
+        </div>
+        <div class="card-content">
+            <div class="workbench-empty" id="workbench-empty">请从左侧选择一条结论开始复核。</div>
+
+            <div id="workbench" style="display:none;">
+                <div class="workbench-header">
+                    <h3 id="wb-title">结论复核</h3>
+                    <span class="badge" id="wb-badge">—</span>
+                </div>
+
+                <!-- 复核前后对比 -->
+                <div class="compare-grid">
+                    <div class="compare-col no-edit">
+                        <span class="compare-label">AI 原始结论（只读）</span>
+                        <div class="compare-value" id="wb-original"></div>
+                    </div>
+                    <div class="compare-col">
+                        <span class="compare-label">专家修正结论</span>
+                        <textarea id="wb-revised" placeholder="如认同原结论，可原样保留"></textarea>
+                    </div>
+                </div>
+
+                <!-- 证据参考 -->
+                <div class="evidence-ref">
+                    <div class="ref-label">判定依据 · 规则依据</div>
+                    <div class="ref-quote" id="wb-quote"></div>
+                </div>
+
+                <!-- 修正理由（必填） -->
+                <div class="field" id="field-reason">
+                    <label class="field-label" for="wb-reason">修正理由<span class="required">*</span></label>
+                    <textarea id="wb-reason" placeholder="说明为何修改或认同该结论"></textarea>
+                    <div class="field-error" id="err-reason">修正理由为必填项，请填写后再提交。</div>
+                </div>
+
+                <!-- 依据条款（必填） -->
+                <div class="field" id="field-basis">
+                    <label class="field-label" for="wb-basis">依据条款<span class="required">*</span></label>
+                    <textarea id="wb-basis" placeholder="填写具体的法规、制度条款或规则编号"></textarea>
+                    <div class="field-error" id="err-basis">依据条款为必填项，请填写后再提交。</div>
+                    <div class="field-hint">两项必填内容全部填写后才能提交复核结果。</div>
+                </div>
+
+                <div class="submit-bar">
+                    <button class="btn btn-primary" id="wb-submit">提交复核结果</button>
+                    <button class="btn btn-secondary" id="wb-reset">重置表单</button>
+                    <span class="submit-note">提交后结论与理由将写入复核记录</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const results = {{ results | tojson }};
+    const reviewed = {{ reviewed | tojson }};
+
+    const queue = document.getElementById('review-queue');
+    const empty = document.getElementById('workbench-empty');
+    const workbench = document.getElementById('workbench');
+    const elOriginal = document.getElementById('wb-original');
+    const elRevised = document.getElementById('wb-revised');
+    const elReason = document.getElementById('wb-reason');
+    const elBasis = document.getElementById('wb-basis');
+    const elQuote = document.getElementById('wb-quote');
+    const elTitle = document.getElementById('wb-title');
+    const elBadge = document.getElementById('wb-badge');
+    const elRuleVersion = document.querySelector('.ref-label');
+    const fieldReason = document.getElementById('field-reason');
+    const fieldBasis = document.getElementById('field-basis');
+    let currentId = null;
+
+    const riskText = { high: '高风险', medium: '中风险', low: '低风险' };
+    const riskClass = { high: 'badge-red', medium: 'badge-yellow', low: 'badge-green' };
+
+    function clearErrors() {
+        fieldReason.classList.remove('invalid');
+        fieldBasis.classList.remove('invalid');
+    }
+
+    function resetForm() {
+        elRevised.value = '';
+        elReason.value = '';
+        elBasis.value = '';
+        clearErrors();
+    }
+
+    queue.addEventListener('click', function (e) {
+        const item = e.target.closest('.queue-item');
+        if (!item) return;
+        document.querySelectorAll('.queue-item').forEach(li => li.classList.remove('active'));
+        item.classList.add('active');
+        currentId = item.dataset.resultId;
+        const r = results.find(x => x.id === currentId);
+        if (!r) return;
+
+        empty.style.display = 'none';
+        workbench.style.display = 'block';
+        elTitle.textContent = r.id + ' · ' + r.clause_id;
+        elBadge.textContent = riskText[r.risk_level] || r.risk_level;
+        elBadge.className = 'badge ' + (riskClass[r.risk_level] || '');
+        elOriginal.textContent = r.description;
+        elRuleVersion.textContent = '判定依据 · 规则 ' + (r.rule_version || r.rule_id || '—');
+        elQuote.textContent = r.rule_quote || '';
+        resetForm();
+    });
+
+    function validate() {
+        clearErrors();
+        let ok = true;
+        if (!elReason.value.trim()) { fieldReason.classList.add('invalid'); ok = false; }
+        if (!elBasis.value.trim()) { fieldBasis.classList.add('invalid'); ok = false; }
+        return ok;
+    }
+
+    document.getElementById('wb-reset').addEventListener('click', resetForm);
+
+    document.getElementById('wb-submit').addEventListener('click', async function () {
+        if (!currentId) { Utils.showNotification('请先选择一条结论', 'warning'); return; }
+        if (!validate()) {
+            Utils.showNotification('修正理由与依据条款为必填项', 'error');
+            return;
+        }
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = '提交中…';
+        try {
+            const res = await ApiService.post('/expert/submit', {
+                result_id: currentId,
+                revised_conclusion: elRevised.value.trim() || elOriginal.textContent,
+                reason: elReason.value.trim(),
+                basis: elBasis.value.trim()
+            });
+            if (res.success) {
+                Utils.showNotification('复核结果已提交', 'success');
+                const item = queue.querySelector('[data-result-id="' + currentId + '"]');
+                if (item && !item.querySelector('.q-reviewed')) {
+                    const mark = document.createElement('div');
+                    mark.className = 'q-reviewed';
+                    mark.textContent = '已复核提交';
+                    item.appendChild(mark);
+                }
+                resetForm();
+            } else {
+                Utils.showNotification(res.message || '提交失败', 'error');
+            }
+        } catch (err) {
+            Utils.showNotification('提交失败：' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '提交复核结果';
+        }
+    });
+
+    [elReason, elBasis].forEach(function (el) {
+        el.addEventListener('input', function () {
+            if (el.value.trim()) el.closest('.field').classList.remove('invalid');
+        });
+    });
+})();
+</script>
+{% endblock %}

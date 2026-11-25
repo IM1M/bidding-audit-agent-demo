@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid gap-lg">
+    <!-- 欢迎横幅 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">欢迎使用招标文件AI审核系统演示版</h2>
+            <p class="card-subtitle">脱敏复现版本 - 仅用于技术展示和个人项目呈现</p>
+        </div>
+        <div class="card-content">
+            <p>本系统演示了AI驱动文档审核的核心功能和工作流程，基于实际团队协作项目复现，所有数据均为示例值。</p>
+            
+            <div class="alert-box">
+                <p><strong>重要声明：</strong>原系统为团队协作交付的商业项目，演示版通过前端界面展示核心功能，不包含真实AI组件和后端处理能力。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 示例文档展示 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">示例招标文件</h2>
+            <p class="card-subtitle">FR-01：示例文档展示</p>
+        </div>
+        <div class="card-content">
+            <div class="document-preview">
+                <div class="document-meta grid grid-3 gap-md">
+                    <div class="meta-item">
+                        <h3>文档名称</h3>
+                        <p class="meta-value">{{ document.name }}</p>
+                    </div>
+                    <div class="meta-item">
+                        <h3>页数</h3>
+                        <p class="meta-value">{{ document.pages }} 页</p>
+                    </div>
+                    <div class="meta-item">
+                        <h3>条款数</h3>
+                        <p class="meta-value">{{ document.clauses }} 条</p>
+                    </div>
+                </div>
+                
+                <div class="document-description">
+                    <h3>文件描述</h3>
+                    <p>{{ document.description }}</p>
+                    <p class="meta-note">上传时间：{{ document.upload_time }} | 文件大小：{{ document.file_size }}</p>
+                </div>
+                
+                <div class="document-actions flex gap-md">
+                    <a href="/review" class="btn btn-primary">
+                        开始审查
+                    </a>
+                    <button class="btn btn-secondary" id="refresh-document">
+                        刷新示例数据
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统功能概览 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">系统功能概览</h2>
+            <p class="card-subtitle">基于6个功能需求实现的完整演示</p>
+        </div>
+        <div class="card-content">
+            <div class="features-grid grid grid-3 gap-md">
+                <div class="feature-item">
+                    <div class="feature-icon">01</div>
+                    <h3>FR-01 示例文档展示</h3>
+                    <p>展示脱敏招标文件的元信息，包括页数、条款数和开始审查入口。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">02</div>
+                    <h3>FR-02 六节点流水线</h3>
+                    <p>可视化展示审核流水线的状态和耗时，支持节点级重试。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">03</div>
+                    <h3>FR-03 分级报告</h3>
+                    <p>红/黄/绿三级颜色展示审查结论，包含置信度和原文锚点。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">04</div>
+                    <h3>FR-04 证据链定位</h3>
+                    <p>点击结论查看完整证据链，高亮定位到原文对应位置。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">05</div>
+                    <h3>FR-05 专家复核</h3>
+                    <p>专家复核界面，修改结论必须填写修正理由和依据条款。</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">06</div>
+                    <h3>FR-06 指标看板</h3>
+                    <p>展示核心业务指标，明确标注为团队协作成果。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技术栈信息 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">技术实现</h2>
+            <p class="card-subtitle">演示版技术栈与实现方式</p>
+        </div>
+        <div class="card-content">
+            <div class="tech-stack grid grid-2 gap-md">
+                <div class="tech-item">
+                    <h3>前端技术</h3>
+                    <ul>
+                        <li>FastAPI Web框架</li>
+                        <li>Jinja2模板引擎</li>
+                        <li>原生HTML/CSS/JavaScript</li>
+                        <li>响应式布局设计</li>
+                    </ul>
+                </div>
+                
+                <div class="tech-item">
+                    <h3>数据模拟</h3>
+                    <ul>
+                        <li>内存中Mock数据管理</li>
+                        <li>JSON格式示例数据</li>
+                        <li>模拟API接口调用</li>
+                        <li>状态同步机制</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.document-preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.meta-item {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 6px;
+}
+
+.meta-item h3 {
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0;
+}
+
+.document-description {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 6px;
+    border-left: 4px solid var(--color-primary);
+}
+
+.document-description h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.document-actions {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.alert-box {
+    padding: var(--spacing-md);
+    background-color: var(--color-yellow-light);
+    border: 1px solid var(--color-yellow);
+    border-radius: 6px;
+    margin-top: var(--spacing-md);
+}
+
+.feature-item {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 6px;
+    transition: transform var(--transition-normal) ease;
+}
+
+.feature-item:hover {
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.feature-item h3 {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-xs);
+}
+
+.tech-item {
+    padding: var(--spacing-md);
+    background-color: var(--color-light);
+    border-radius: 6px;
+}
+
+.tech-item h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+}
+
+.tech-item ul {
+    list-style: none;
+    padding: 0;
+}
+
+.tech-item li {
+    padding: var(--spacing-xs) 0;
+    color: var(--color-secondary);
+    position: relative;
+    padding-left: var(--spacing-md);
+}
+
+.tech-item li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+    .meta-item,
+    .feature-item,
+    .tech-item {
+        padding: var(--spacing-sm);
+    }
+    
+    .meta-value {
+        font-size: var(--font-size-lg);
+    }
+}
+</style>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 刷新文档按钮交互
+    const refreshBtn = document.getElementById('refresh-document');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            fetch('/api/document')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('示例文档数据已刷新（演示版数据为静态示例）');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing document:', error);
+                    alert('刷新失败，请稍后重试');
+                });
+        });
+    }
+    
+    // 平滑滚动到功能区域
+    const featureItems = document.querySelectorAll('.feature-item');
+    featureItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const featureTitle = this.querySelector('h3').textContent;
+            alert(`查看 ${featureTitle} 详细演示，请在导航栏中选择对应页面`);
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
