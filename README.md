@@ -1,7 +1,6 @@
 # 招标文件 AI 审核系统（演示复现版）
 
-![CI](https://github.com/YOUR_USERNAME/REPO_NAME/actions/workflows/ci.yml/badge.svg)
-<!-- 上传前将上面徽章 URL 中的 YOUR_USERNAME/REPO_NAME 替换为实际 GitHub 用户名与仓库名 -->
+![CI](https://github.com/WOSHI1M/bidding-audit-agent-demo/actions/workflows/ci.yml/badge.svg)
 
 基于简历项目一脱敏复现的公开演示项目：以 FastAPI + Jinja2 实现可交互的前端演示页，呈现六节点审核流水线、分级报告、证据链定位与专家复核等核心流程。
 
